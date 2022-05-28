@@ -138,3 +138,4 @@ dmypy.json
 *.pycharm
 *.eclipse
 .idea/
+.DS_Store
