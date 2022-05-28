@@ -18,7 +18,7 @@ class Transaction(BaseModel):
     content: str
 
 
-PORT = config('PORT', default=5001, cast=int)
+PORT = config('PORT', default=8080, cast=int)
 HOST = config('HOST', default="0.0.0.0")
 FORMAT = config('FORMAT', default="%(asctime)s - %(levelname)s - %(message)s")
 LOGGING_LEVEL = config('LOGGING_LEVEL', default="INFO")

@@ -9,7 +9,7 @@ pydantic==1.9.0
 python-decouple==3.6
 router==0.1
 sniffio==1.2.0
-starlette==0.20.0
+starlette==0.19.1
 typing_extensions==4.2.0
 uvicorn==0.17.6
 pytest==7.1.2
