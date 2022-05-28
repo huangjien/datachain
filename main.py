@@ -6,6 +6,7 @@ from decouple import config
 from fastapi import FastAPI, Body, requests
 from fastapi_utils.tasks import repeat_every
 from pydantic import BaseModel
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from blockchain import Blockchain
 from pages import general_pages_router
@@ -28,7 +29,7 @@ app = FastAPI(name="Deployment", docs_url="/docs", redoc_url="/redoc",
               version='0.1.5', openapi_url="/openapi.json",
               title="Data BlockChain", description="Data in Blockchain")
 blockchain = Blockchain()
-# app.add_middleware(HTTPSRedirectMiddleware)
+app.add_middleware(HTTPSRedirectMiddleware)
 # app.add_middleware(
 #     TrustedHostMiddleware, allowed_hosts=["localhost", "0.0.0.0", "127.0.0.1"]
 # )
@@ -95,6 +96,6 @@ def announce_new_block(block):
 app.add_event_handler("shutdown", dump_data)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=HOST, port=PORT, log_level="debug")
-    # uvicorn.run(app, host=HOST, port=443, log_level="debug",
-    #             ssl_keyfile="./key.pem", ssl_certfile="./certificate.pem")
+    # uvicorn.run(app, host=HOST, port=PORT, log_level="debug")
+    uvicorn.run(app, host=HOST, port=443, log_level="debug",
+                ssl_keyfile="./key.pem", ssl_certfile="./certificate.pem")
