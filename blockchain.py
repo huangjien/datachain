@@ -1,6 +1,20 @@
 import json
+import pickle
 import time
+from decouple import config
 from hashlib import sha256
+
+
+# Block class
+# Block is a class that contains the data and the hash of the previous block
+# The hash of the previous block is used to link the blocks together
+# The hash of the block is used to verify the integrity of the chain
+# We plan to use the blockchain to store the data
+# Need to solve below issues:
+# 1. In CRUD operations, we need to be able to add, read data
+# 2. How to solve the conflicts
+# 3. Performance of reading data, especially when the data is large and have many nodes
+from os.path import exists
 
 
 class Block:
@@ -10,6 +24,7 @@ class Block:
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.nonce = 0
+
 
     def compute_hash(self):
         """
@@ -22,11 +37,19 @@ class Block:
 class Blockchain:
     # difficulty of our PoW algorithm
     difficulty = 2
+    file_name = config("BLOCK_CHAIN_BACKUP", default = './blockchain.bk')
 
     def __init__(self):
-        self.unconfirmed_data = []
-        self.chain = []
-        self.create_genesis_block()
+        if exists(self.file_name):
+            with open(self.file_name, 'rb') as f:
+                self.chain = pickle.load(f)
+        else:
+            self.unconfirmed_data = []
+            self.chain = []
+            self.create_genesis_block()
+
+    def dump_data(self):
+        pickle.dump(self.chain, open(self.file_name, 'wb'))
 
     def create_genesis_block(self):
         """
@@ -128,3 +151,4 @@ class Blockchain:
 
         self.unconfirmed_data = []
         return new_block.index
+

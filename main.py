@@ -1,12 +1,15 @@
 import json
 
 import uvicorn as uvicorn
-from fastapi import FastAPI, Request, Body
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from decouple import config
+from fastapi import FastAPI, Body, requests
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi_utils.tasks import repeat_every
 from pydantic import BaseModel
-from pages import general_pages_router
+
 from blockchain import Blockchain
+from pages import general_pages_router
+from pagination import Page
 
 
 class Transaction(BaseModel):
@@ -23,11 +26,20 @@ app = FastAPI(name="Deployment", docs_url="/docs", redoc_url="/redoc",
               version='0.1.4', openapi_url="/openapi.json",
               title="Deployment", description="Deployment with Blockchain")
 blockchain = Blockchain()
-app.add_middleware(HTTPSRedirectMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)
 # app.add_middleware(
 #     TrustedHostMiddleware, allowed_hosts=["localhost", "0.0.0.0", "127.0.0.1"]
 # )
 app.include_router(general_pages_router)
+
+# the address to other participating members of the network
+peers = set()
+
+
+# @repeat_every(seconds=30 * 60)  # every 30 minutes
+async def dump_data():
+    print("Application shutting down...Dumping data...number of blocks:", len(blockchain.chain))
+    blockchain.dump_data()
 
 
 @app.post("/data", )
@@ -62,6 +74,20 @@ def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_data)
 
 
+def announce_new_block(block):
+    for peer in peers:
+        try:
+            url = "{}add_block".format(peer)
+            headers = {'Content-Type': 'application/json'}
+            requests.post(url, data=json.dumps(block.__dict__, sort_keys=True), headers=headers)
+        except requests.exceptions.ConnectionError:
+            print(f"Connection error: {peer}")
+
+
+# when shutting down the server, dump the data
+app.add_event_handler("shutdown", dump_data)
+
 if __name__ == "__main__":
-    uvicorn.run(app, host=HOST, port=443, log_level="debug",
-                ssl_keyfile="./key.pem", ssl_certfile="./certificate.pem")
+    uvicorn.run(app, host=HOST, port=PORT, log_level="debug")
+    # uvicorn.run(app, host=HOST, port=443, log_level="debug",
+    #             ssl_keyfile="./key.pem", ssl_certfile="./certificate.pem")
