@@ -1,15 +1,14 @@
 import json
+import logging
 
 import uvicorn as uvicorn
 from decouple import config
 from fastapi import FastAPI, Body, requests
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi_utils.tasks import repeat_every
 from pydantic import BaseModel
 
 from blockchain import Blockchain
 from pages import general_pages_router
-from pagination import Page
 
 
 class Transaction(BaseModel):
@@ -21,10 +20,13 @@ class Transaction(BaseModel):
 
 PORT = config('PORT', default=5001, cast=int)
 HOST = config('HOST', default="0.0.0.0")
+FORMAT = config('FORMAT', default="%(asctime)s - %(levelname)s - %(message)s")
+LOGGING_LEVEL = config('LOGGING_LEVEL', default="INFO")
+logging.basicConfig(format=FORMAT, level=LOGGING_LEVEL)
 
 app = FastAPI(name="Deployment", docs_url="/docs", redoc_url="/redoc",
-              version='0.1.4', openapi_url="/openapi.json",
-              title="Deployment", description="Deployment with Blockchain")
+              version='0.1.5', openapi_url="/openapi.json",
+              title="Data BlockChain", description="Data in Blockchain")
 blockchain = Blockchain()
 # app.add_middleware(HTTPSRedirectMiddleware)
 # app.add_middleware(
@@ -36,9 +38,14 @@ app.include_router(general_pages_router)
 peers = set()
 
 
-# @repeat_every(seconds=30 * 60)  # every 30 minutes
-async def dump_data():
-    print("Application shutting down...Dumping data...number of blocks:", len(blockchain.chain))
+@app.on_event("startup")
+@repeat_every(seconds=5 * 60, wait_first=True)  # every 30 minutes
+def backup_local_data():
+    dump_data()
+
+
+def dump_data():
+    logging.info("Dumping data...number of blocks: %d", len(blockchain.chain))
     blockchain.dump_data()
 
 
@@ -81,7 +88,7 @@ def announce_new_block(block):
             headers = {'Content-Type': 'application/json'}
             requests.post(url, data=json.dumps(block.__dict__, sort_keys=True), headers=headers)
         except requests.exceptions.ConnectionError:
-            print(f"Connection error: {peer}")
+            logging.warning(f"Connection error: {peer}")
 
 
 # when shutting down the server, dump the data

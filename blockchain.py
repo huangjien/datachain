@@ -1,10 +1,7 @@
 import json
 import pickle
 import time
-from decouple import config
 from hashlib import sha256
-
-
 # Block class
 # Block is a class that contains the data and the hash of the previous block
 # The hash of the previous block is used to link the blocks together
@@ -16,6 +13,8 @@ from hashlib import sha256
 # 3. Performance of reading data, especially when the data is large and have many nodes
 from os.path import exists
 
+from decouple import config
+
 
 class Block:
     def __init__(self, index, data, timestamp, previous_hash):
@@ -24,7 +23,6 @@ class Block:
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.nonce = 0
-
 
     def compute_hash(self):
         """
@@ -37,7 +35,7 @@ class Block:
 class Blockchain:
     # difficulty of our PoW algorithm
     difficulty = 2
-    file_name = config("BLOCK_CHAIN_BACKUP", default = './blockchain.bk')
+    file_name = config("BLOCK_CHAIN_BACKUP", default='./blockchain.bk')
 
     def __init__(self):
         if exists(self.file_name):
@@ -151,4 +149,3 @@ class Blockchain:
 
         self.unconfirmed_data = []
         return new_block.index
-
