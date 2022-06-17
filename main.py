@@ -1,6 +1,6 @@
 import json
 import logging
-
+from socket import *
 import uvicorn as uvicorn
 from decouple import config
 from fastapi import FastAPI, Body, requests
@@ -40,7 +40,7 @@ peers = set()
 
 
 @app.on_event("startup")
-@repeat_every(seconds=5 * 60, wait_first=True)  # every 30 minutes
+@repeat_every(seconds=30 * 60, wait_first=True)  # every 30 minutes
 def backup_local_data():
     dump_data()
 
@@ -59,6 +59,7 @@ async def set_data(content: dict = Body(...)):
 
 @app.get("/mine")
 def mine():
+    # you need to do something hard to earn some opportunities
     blockchain.mine()
     return {"message": "New Block mined"}
 
@@ -74,7 +75,7 @@ def get_chain():
 
 @app.get("/status")
 def status():
-    return {"message": "Server is running"}
+    return {"message": "Server is running", "host":  gethostname(), "ip": gethostbyname(gethostname()), "chain_length": len(blockchain.chain)}
 
 
 @app.route('/pending_tx')

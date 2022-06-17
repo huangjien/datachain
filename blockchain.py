@@ -52,7 +52,7 @@ class Blockchain:
     def create_genesis_block(self):
         """
         A function to generate genesis block and appends it to
-        the chain. The block has index 0, previous_hash as 0, and
+        the chain. The block has index number 0, previous_hash as 0, and
         a valid hash.
         """
         genesis_block = Block(0, [], time.time(), "0")
@@ -68,7 +68,7 @@ class Blockchain:
         A function that adds the block to the chain after verification.
         Verification includes:
         * Checking if the proof is valid.
-        * The previous_hash referred in the block and the hash of latest block
+        * The previous_hash referred in the block and the hash of last block
           in the chain match.
         """
         previous_hash = self.last_block.hash
